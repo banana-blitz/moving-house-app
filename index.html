@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>מעבר דירה</title>
+  <style>
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:#eef3f8;color:#0f172a}
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    .app{min-height:100vh;padding-bottom:92px}
+    header{position:sticky;top:0;z-index:50;background:linear-gradient(135deg,#071126,#101b33 60%,#17233f);color:white;box-shadow:0 12px 32px rgba(15,23,42,.22)}
+    .head{max-width:820px;margin:auto;padding:16px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .homeIcon{font-size:34px;filter:drop-shadow(0 8px 14px rgba(0,0,0,.25))}
+    h1{margin:0;font-size:24px;font-weight:900;line-height:1}
+    .sub{margin:6px 0 0;color:#cbd5e1;font-size:13px;font-weight:700}
+    .sync{margin:4px 0 0;color:#86efac;font-size:11px;font-weight:900}
+    .searchBtn{width:44px;height:44px;border-radius:16px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.1);color:white;font-size:20px}
+    .progressLine{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;margin-top:15px}
+    .pct{font-size:13px;font-weight:900;color:white}
+    .bar{height:8px;border-radius:999px;background:rgba(255,255,255,.2);overflow:hidden}
+    .fill{height:100%;background:linear-gradient(90deg,#22c55e,#86efac);border-radius:999px;transition:.25s}
+    #search{width:100%;display:none;margin-top:14px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.1);color:white;border-radius:16px;padding:12px 14px;outline:none}
+    #search::placeholder{color:#cbd5e1}
+    main{max-width:820px;margin:auto;padding:18px 14px}
+    .page{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+    h2{margin:0;font-size:24px;font-weight:900}
+    .count{margin:4px 0 0;color:#64748b;font-size:12px;font-weight:800}
+    .clear{border:1px solid #e2e8f0;background:white;border-radius:999px;padding:8px 12px;font-size:12px;font-weight:900;display:none}
+    .section{margin-bottom:18px;border-radius:24px;overflow:hidden;background:white;border:1px solid #e2e8f0;box-shadow:0 8px 24px rgba(15,23,42,.07)}
+    .category{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;background:linear-gradient(90deg,#f8f5ff,#ffffff);border-bottom:1px solid #e2e8f0}
+    .catTitle{margin:0;font-size:17px;font-weight:900;color:#0f172a}
+    .catBadge{border-radius:999px;background:#ede9fe;color:#6d28d9;font-size:11px;font-weight:900;padding:6px 10px}
+    .category.cleaning{background:linear-gradient(90deg,#eefdf3,#ffffff)}
+    .category.cleaning .catBadge{background:#dcfce7;color:#15803d}
+    .category.paper{background:linear-gradient(90deg,#eff6ff,#ffffff)}
+    .category.paper .catBadge{background:#dbeafe;color:#2563eb}
+    .tasks{display:grid}
+    .task{padding:13px 14px;border-bottom:1px solid #eef2f7}
+    .task:last-child{border-bottom:0}
+    .taskTop{display:block}
+    .circle{display:none}
+    .circle.work{background:#fffbeb;border-color:#f59e0b;color:#b45309}
+    .circle.done{background:#22c55e;border-color:#22c55e;color:white}
+    .taskBody{width:100%;min-width:0}
+    .taskText{margin:0;font-size:16px;line-height:1.5;font-weight:900;color:#0f172a}
+    .taskText.done{color:#94a3b8;text-decoration:line-through}
+    .chips{display:none}
+    .chip{border-radius:999px;padding:5px 9px;font-size:11px;font-weight:900;border:1px solid transparent}
+    .s-not{background:#fff1f2;color:#be123c;border-color:#fecdd3}
+    .s-work{background:#fffbeb;color:#b45309;border-color:#fde68a}
+    .s-done{background:#ecfdf5;color:#047857;border-color:#bbf7d0}
+    .urgent{background:#dc2626;color:white}
+    .actions{display:none}
+    .statusBtn{border:1px solid #dbe3ef;background:white;border-radius:12px;padding:9px 4px;font-size:12px;font-weight:900;color:#334155}
+    .statusBtn.active.not{background:#fff1f2;color:#be123c;border-color:#fecdd3}
+    .statusBtn.active.work{background:#fffbeb;color:#b45309;border-color:#fde68a}
+    .statusBtn.active.done{background:#ecfdf5;color:#047857;border-color:#bbf7d0}
+    .extras{display:none}
+    .urgentBtn,.editBtn{border:0;background:transparent;color:#2563eb;font-size:11px;font-weight:900;padding:7px 4px;white-space:nowrap}.deleteBtn{border:0;background:transparent;color:#dc2626;font-size:11px;font-weight:900;padding:7px 4px;white-space:nowrap}
+    .urgentBtn.active{background:#dc2626;color:white;border-color:#dc2626}
+    .deleteBtn{color:#dc2626}
+    .meta{display:none}
+    .meta input{display:none}
+    nav{position:fixed;bottom:0;left:0;right:0;z-index:60;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border-top:1px solid #e2e8f0;padding:8px 4px max(8px,env(safe-area-inset-bottom))}
+    .navIn{max-width:820px;margin:auto;display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+    .navBtn{border:0;background:transparent;color:#64748b;border-radius:16px;padding:8px 2px}
+    .navBtn.active{background:#0f172a;color:white;box-shadow:0 10px 22px rgba(15,23,42,.18)}
+    .ico{font-size:18px;line-height:1}
+    .lab{font-size:10px;font-weight:900;margin-top:4px}
+    .addFab{position:fixed;left:16px;bottom:94px;z-index:70;width:56px;height:56px;border:0;border-radius:50%;background:#0f172a;color:white;font-size:34px;line-height:1;box-shadow:0 18px 35px rgba(15,23,42,.3)}
+    .panel{display:none;position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.42);padding:18px;align-items:flex-end}
+    .panel.open{display:flex}
+    .panelBox{width:100%;max-width:820px;margin:0 auto;background:white;border-radius:26px;padding:16px;box-shadow:0 22px 60px rgba(15,23,42,.35)}
+    .panelHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .panelHead h3{margin:0;font-size:18px;font-weight:900}
+    .closeBtn{border:0;background:#f1f5f9;border-radius:999px;padding:8px 12px;font-size:13px;font-weight:900;color:#475569}
+    .formGrid{display:grid;gap:10px}
+    .formGrid input,.formGrid select{width:100%;border:1px solid #cbd5e1;background:#f8fafc;border-radius:14px;padding:12px;font-size:15px;outline:none}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .addBtn{border:0;background:#0f172a;color:white;border-radius:16px;padding:13px;font-weight:900}
+    .empty{background:white;border:1px solid #e2e8f0;border-radius:24px;padding:34px;text-align:center;color:#64748b}
+    @media(min-width:900px){.task{padding:13px 14px;border-bottom:1px solid #eef2f7}.taskTop{display:block}.actions{display:none}.extras{display:none}.meta{display:none}}
+  
+.rowControls{margin-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto auto;gap:6px;align-items:center}
+.rowControls button{min-height:34px}
+.statusBtn{border:1px solid #dbe3ef;background:white;border-radius:999px;padding:7px 8px;font-size:11px;font-weight:900;color:#334155;white-space:nowrap}
+.statusBtn.active.not{background:#fff1f2;color:#be123c;border-color:#fecdd3}
+.statusBtn.active.work{background:#fffbeb;color:#b45309;border-color:#fde68a}
+.statusBtn.active.done{background:#ecfdf5;color:#047857;border-color:#bbf7d0}
+.urgentBtn{border:1px solid #dbe3ef;background:white;border-radius:999px;padding:7px 8px;font-size:11px;font-weight:900;color:#475569;white-space:nowrap}
+.urgentBtn.active{background:#dc2626;color:white;border-color:#dc2626}
+.deleteBtn{border:0;background:transparent;color:#dc2626;font-size:11px;font-weight:900;padding:7px 4px;white-space:nowrap}
+@media(max-width:480px){.rowControls{grid-template-columns:repeat(4,1fr);}.deleteBtn{grid-column:1/-1;text-align:left}.taskText{font-size:15px}}
+
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="head">
+    <div class="top">
+      <button class="searchBtn" id="searchToggle">🔎</button>
+      <div class="brand">
+        <div>
+          <h1>מעבר דירה</h1>
+          <p class="sub" id="subtitle">יכין 4 ➜ הרא״ה 94</p>
+          <p class="sync" id="sync">מתחבר...</p>
+        </div>
+        <div class="homeIcon">🏠</div>
+      </div>
+    </div>
+    <div class="progressLine">
+      <span class="pct" id="pct">0%</span>
+      <div class="bar"><div class="fill" id="fill"></div></div>
+      <span class="pct" id="doneSmall">0/0</span>
+    </div>
+    <input id="search" placeholder="חיפוש משימה...">
+  </div>
+</header>
+
+<main>
+  <div class="page">
+    <div>
+      <h2 id="pageTitle">דחוף</h2>
+      <p class="count" id="count"></p>
+    </div>
+    <button class="clear" id="clear">ניקוי חיפוש</button>
+  </div>
+  <div id="list"></div>
+</main>
+
+<nav>
+  <div class="navIn">
+    <button class="navBtn active" data-tab="today"><div class="ico">🔥</div><div class="lab">דחוף</div></button>
+    <button class="navBtn" data-tab="new"><div class="ico">🏠</div><div class="lab">חדשה</div></button>
+    <button class="navBtn" data-tab="old"><div class="ico">📦</div><div class="lab">נוכחית</div></button>
+    <button class="navBtn" data-tab="shopping"><div class="ico">🛒</div><div class="lab">קניות</div></button>
+    <button class="navBtn" data-tab="progress"><div class="ico">🟡</div><div class="lab">בטיפול</div></button>
+    <button class="navBtn" data-tab="done"><div class="ico">✅</div><div class="lab">בוצע</div></button>
+  </div>
+</nav>
+
+<button class="addFab" id="addFab">+</button>
+<div class="panel" id="addPanel">
+  <div class="panelBox">
+    <div class="panelHead">
+      <h3>משימה חדשה</h3>
+      <button class="closeBtn" id="closePanel">סגור</button>
+    </div>
+    <div class="formGrid">
+      <input id="newTaskText" placeholder="מה צריך לעשות?">
+      <div class="two">
+        <select id="newTaskArea">
+          <option value="new">דירה חדשה</option>
+          <option value="old">דירה נוכחית</option>
+          <option value="shopping">קניות</option>
+        </select>
+        <select id="newTaskPriority"><option value="">לא דחוף</option><option value="גבוה">🔥 דחוף</option></select>
+      </div>
+      <input id="newTaskCategory" placeholder="קטגוריה" value="כללי">
+      <button class="addBtn" id="createTask">הוסף משימה</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getFirestore, doc, setDoc, onSnapshot, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCpuI-ozA7qrQR7-CuY9c9wHl4MLsZuJoo",
+  authDomain: "moving-house-36edb.firebaseapp.com",
+  projectId: "moving-house-36edb",
+  storageBucket: "moving-house-36edb.firebasestorage.app",
+  messagingSenderId: "427501826897",
+  appId: "1:427501826897:web:0e6dfe2d956f2a47c69970"
+};
+
+const INITIAL_TASKS = [{"id": 1, "area": "old", "category": "תיעוד וסגירה", "task": "צילום הדירה שלא נקבל הפתעות", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 2, "area": "old", "category": "בטחונות ומסמכים", "task": "לקחת מבעלת הדירה הנוכחית שטר חוב על סך 75 אלף", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 3, "area": "old", "category": "בטחונות ומסמכים", "task": "לקחת / להסדיר ערבויות מול בעלת הדירה הנוכחית", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 4, "area": "old", "category": "בטחונות ומסמכים", "task": "לקחת שיקים לכל החשבונות שהיו: חשמל, מים, ארנונה", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 5, "area": "old", "category": "מה נשאר בדירה", "task": "להחליט / לתאם האם משאירים ארונות", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 6, "area": "old", "category": "מה נשאר בדירה", "task": "להחליט / לתאם האם משאירים מדיח", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 7, "area": "old", "category": "ניתוקים", "task": "לנתק חשמל מהשם שלי", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 8, "area": "old", "category": "ניתוקים", "task": "לנתק מים מהשם שלי", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 9, "area": "old", "category": "ניתוקים", "task": "לנתק ארנונה מהשם שלי", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 10, "area": "old", "category": "ניתוקים", "task": "לנתק / לסגור ועד בית", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 11, "area": "old", "category": "מול יפה", "task": "יפה — לעדכן עד 14.5 אם יש מחליפים או אין", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 12, "area": "old", "category": "תיקונים", "task": "לבדוק אם צריך לצבוע דירה או שיפה אמרה שנסתדר", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 13, "area": "old", "category": "תיקונים", "task": "ממ״ד — לתקן סגירה", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 14, "area": "old", "category": "תיקונים", "task": "מטבח — להחליף מנורה קטנה פאן", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 15, "area": "old", "category": "תיקונים", "task": "ברז כיור חדר שינה — יצא מהמקום", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 16, "area": "new", "category": "ליאם / מסגרת", "task": "בייבי קלאב — להעביר לסניף החדש; אמרו ב־13.5 שיש מקום", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 17, "area": "new", "category": "חוזה ותשלומים", "task": "מאיר בעל דירה — ממתין לחוזה סופי", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 18, "area": "new", "category": "חוזה ותשלומים", "task": "אייל — ממתין לגבי דמי תיווך כמה", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 19, "area": "new", "category": "תאריכים", "task": "חוזה בדירה קיימת נגמר ב־15.6", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 20, "area": "new", "category": "תאריכים", "task": "דירה חדשה ניתן להיכנס כבר ב־1.6", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 21, "area": "new", "category": "רואת חשבון", "task": "עדכונים למס הכנסה, ביטוח לאומי וכל מה שקשור במעבר דירה", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 22, "area": "new", "category": "רואת חשבון", "task": "לשאול אם אפשר לקבל החזרים על דמי תיווך, שכר דירה וכו׳", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 23, "area": "new", "category": "דוחות", "task": "בדוחות לשנות את העלויות החדשות של כל הדירה החדשה", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 24, "area": "new", "category": "שינוי כתובת", "task": "כתובת דואר — לשנות לאזור החדש", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 25, "area": "new", "category": "שינוי כתובת", "task": "אוטו / רכב — לשנות לאזור החדש", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 26, "area": "new", "category": "שינוי כתובת", "task": "תושב / משרד הפנים — לשנות לאזור החדש", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 27, "area": "new", "category": "הובלה", "task": "מובילים + פירוק והרכבה — להתחיל לחפש ולבדוק מה עושים", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 28, "area": "new", "category": "חוזה ותשלומים", "task": "להכין 12 צ׳קים לדירה החדשה", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 29, "area": "new", "category": "חוזה ותשלומים", "task": "להכין צ׳ק ביטחון / שטר חוב / ערבויות", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 30, "area": "new", "category": "לפני כניסה", "task": "חברת ניקיון לדירה החדשה", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 31, "area": "new", "category": "לפני כניסה", "task": "ריסוס לדירה החדשה", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 32, "area": "new", "category": "לפני כניסה", "task": "לראות שיש מנעול חדש", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 33, "area": "new", "category": "לפני כניסה", "task": "אמר שיש רשתות כבר — לבדוק בפועל", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 34, "area": "new", "category": "לפני כניסה", "task": "לבדוק כיריים", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 35, "area": "new", "category": "לפני כניסה", "task": "לבדוק מנורות בכל הבית", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 36, "area": "new", "category": "לפני כניסה", "task": "לדבר מול אשתו לגבי רשתות / כיריים / מנורות", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 37, "area": "new", "category": "התקנות", "task": "להזמין את יניב להתקין הכל על הקירות או לבקש מהמובילים", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 38, "area": "new", "category": "קניות שימושיות", "task": "דייסון או סוג של שואב חדש לבית", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 39, "area": "new", "category": "תשתיות", "task": "להעביר את סלקום לדירה החדשה — אינטרנט והכל", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 40, "area": "new", "category": "אריזות", "task": "לחפש קרטונים להתחיל לארוז", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 41, "area": "new", "category": "שינוי כתובת", "task": "קופת חולים — להעביר לכתובת החדשה", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 42, "area": "new", "category": "שינוי כתובת", "task": "סלקום — להעביר לכתובת החדשה", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 43, "area": "new", "category": "שינוי כתובת", "task": "משרד הפנים — להעביר לכתובת החדשה", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 44, "area": "new", "category": "שינוי כתובת", "task": "כרטיסי אשראי — להעביר לכתובת החדשה", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 45, "area": "new", "category": "בדיקות לפני כניסה", "task": "לצלם מצב דירה חדשה לפני כניסה", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 46, "area": "new", "category": "בדיקות לפני כניסה", "task": "לצלם מוני מים/חשמל בכניסה", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 47, "area": "new", "category": "בדיקות לפני כניסה", "task": "לבדוק מים חמים, לחץ מים ונזילות", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 48, "area": "new", "category": "בדיקות לפני כניסה", "task": "לבדוק חשמל, מזגנים, תריסים וחלונות", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 49, "area": "new", "category": "בטיחות", "task": "לבדוק ביטוח דירה / צד ג׳", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 50, "area": "new", "category": "אריזות", "task": "לסמן קרטונים לפי חדרים", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 51, "area": "new", "category": "אריזות", "task": "להכין קרטון לילה ראשון", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 52, "area": "shopping", "category": "ליאם", "task": "ליאם — מיטה חדשה או לראות שאפשר להנמיך", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 53, "area": "shopping", "category": "ליאם", "task": "חסימת מגירות / הגנת שקעים — ליאם", "priority": "גבוה", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 54, "area": "shopping", "category": "סלון", "task": "מזנון חדש", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 55, "area": "shopping", "category": "אחסון", "task": "ארונות", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 56, "area": "shopping", "category": "סלון", "task": "טלוויזיה נוספת לסלון", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 57, "area": "shopping", "category": "מרפסת", "task": "ריהוט למרפסת", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 58, "area": "shopping", "category": "מרפסת", "task": "מנגל", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}, {"id": 59, "area": "shopping", "category": "תאורה", "task": "תאורה נוספת תחתונה", "priority": "", "timing": "", "status": "לא התחיל", "owner": "", "notes": "", "noteOpen": false}];
+
+let tasks = INITIAL_TASKS;
+let tab = "today";
+let query = "";
+
+const tabs = {today:"דחוף",new:"דירה חדשה",old:"דירה נוכחית",shopping:"קניות",progress:"בטיפול",done:"בוצע"};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const boardRef = doc(db, "boards", "main-moving-board");
+
+const list = document.getElementById("list");
+const subtitle = document.getElementById("subtitle");
+const syncEl = document.getElementById("sync");
+const fill = document.getElementById("fill");
+const pct = document.getElementById("pct");
+const doneSmall = document.getElementById("doneSmall");
+const count = document.getElementById("count");
+const pageTitle = document.getElementById("pageTitle");
+const search = document.getElementById("search");
+const clear = document.getElementById("clear");
+
+function esc(str){
+  return String(str || "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+}
+
+function normalizeTask(t){
+  return {
+    id: t.id || Date.now() + Math.random(),
+    area: t.area || "new",
+    category: t.category || "כללי",
+    task: t.task || "",
+    priority: t.priority === "גבוה" ? "גבוה" : "",
+    status: ["לא התחיל","בטיפול","בוצע"].includes(t.status) ? t.status : "לא התחיל",
+    owner: t.owner || "",
+    notes: t.notes || ""
+  };
+}
+
+function statusClass(status){
+  if(status === "בוצע") return "s-done";
+  if(status === "בטיפול") return "s-work";
+  return "s-not";
+}
+
+function circleClass(status){
+  if(status === "בוצע") return "done";
+  if(status === "בטיפול") return "work";
+  return "";
+}
+
+function circleText(status){
+  if(status === "בוצע") return "✓";
+  if(status === "בטיפול") return "↻";
+  return "○";
+}
+
+function getVisible(){
+  return tasks.filter(t => {
+    const byTab = tab === "today" ? t.priority === "גבוה" && t.status !== "בוצע"
+      : tab === "progress" ? t.status === "בטיפול"
+      : tab === "done" ? t.status === "בוצע"
+      : t.area === tab && t.status !== "בוצע";
+    const bySearch = !query || (t.task + " " + t.category + " " + t.owner).includes(query);
+    return byTab && bySearch;
+  });
+}
+
+function updateStats(){
+  const total = tasks.length || 1;
+  const done = tasks.filter(t => t.status === "בוצע").length;
+  const percent = Math.round(done / total * 100);
+  subtitle.textContent = `יכין 4 ➜ הרא״ה 94 · ${done}/${tasks.length} בוצעו`;
+  fill.style.width = percent + "%";
+  pct.textContent = percent + "%";
+  doneSmall.textContent = `${done}/${tasks.length}`;
+}
+
+function categoryVariant(category){
+  const c = String(category || "");
+  if(c.includes("ניקיון") || c.includes("ריסוס")) return "cleaning";
+  if(c.includes("חוזה") || c.includes("מסמכים") || c.includes("כתובת")) return "paper";
+  return "";
+}
+
+function render(){
+  updateStats();
+  pageTitle.textContent = tabs[tab] || "משימות";
+  document.querySelectorAll(".navBtn").forEach(btn => btn.classList.toggle("active", btn.dataset.tab === tab));
+
+  const visible = getVisible();
+  count.textContent = `${visible.length} משימות מוצגות`;
+  clear.style.display = query ? "inline-block" : "none";
+
+  if(!visible.length){
+    list.innerHTML = '<div class="empty">אין פה משימות כרגע 🎉</div>';
+    return;
+  }
+
+  const groups = {};
+  visible.forEach(t => {
+    const key = t.category || "כללי";
+    groups[key] = groups[key] || [];
+    groups[key].push(t);
+  });
+
+  list.innerHTML = Object.entries(groups).map(([category, items]) => `
+    <section class="section">
+      <div class="category ${categoryVariant(category)}">
+        <h3 class="catTitle">${esc(category)}</h3>
+        <span class="catBadge">${items.length} משימות</span>
+      </div>
+      <div class="tasks">
+        ${items.map(t => `
+          <article class="task">
+            <div class="taskTop">
+              <div class="taskBody">
+                <p class="taskText ${t.status === "בוצע" ? "done" : ""}">${esc(t.task)}</p>
+                <div class="rowControls">
+                  <button class="statusBtn ${t.status === "לא התחיל" ? "active not" : ""}" data-action="setStatus" data-status="לא התחיל" data-id="${t.id}">לא התחיל</button>
+                  <button class="statusBtn ${t.status === "בטיפול" ? "active work" : ""}" data-action="setStatus" data-status="בטיפול" data-id="${t.id}">בטיפול</button>
+                  <button class="statusBtn ${t.status === "בוצע" ? "active done" : ""}" data-action="setStatus" data-status="בוצע" data-id="${t.id}">בוצע</button>
+                  <button class="urgentBtn ${t.priority === "גבוה" ? "active" : ""}" data-action="toggleUrgent" data-id="${t.id}">
+                    ${t.priority === "גבוה" ? "🔥 דחוף" : "לא דחוף"}
+                  </button>
+                  <button class="editBtn" data-action="edit" data-id="${t.id}">ערוך</button><button class="deleteBtn" data-action="delete" data-id="${t.id}">מחק</button>
+                </div>
+
+                </div>
+            </div>
+          </article>
+        `).join("")}
+      </div>
+    </section>
+  `).join("");
+}
+
+async function save(){
+  syncEl.textContent = "שומר...";
+  tasks = tasks.map(normalizeTask);
+  render();
+
+  try{
+    await setDoc(boardRef, {tasks, updatedAt: serverTimestamp()});
+    syncEl.textContent = "מסונכרן";
+  } catch(e){
+    console.error(e);
+    syncEl.textContent = "שגיאת שמירה";
+    localStorage.setItem("moving-house-backup", JSON.stringify(tasks));
+  }
+}
+
+list.addEventListener("click", e => {
+  const el = e.target.closest("[data-action]");
+  if(!el) return;
+
+  const id = Number(el.dataset.id);
+  const t = tasks.find(x => Number(x.id) === id);
+  if(!t) return;
+
+  const action = el.dataset.action;
+
+  if(action === "setStatus") t.status = el.dataset.status;
+  if(action === "toggleUrgent") t.priority = t.priority === "גבוה" ? "" : "גבוה";
+  if(action === "delete"){
+    if(!confirm("למחוק את המשימה?")) return;
+    tasks = tasks.filter(x => Number(x.id) !== id);
+  }
+
+  if(action === "edit"){
+    const updated = prompt("ערוך משימה", t.task);
+    if(updated === null) return;
+    const clean = updated.trim();
+    if(clean) t.task = clean;
+  }
+
+  save();
+});
+
+list.addEventListener("input", e => {
+  const el = e.target.closest("[data-action]");
+  if(!el) return;
+
+  const id = Number(el.dataset.id);
+  const t = tasks.find(x => Number(x.id) === id);
+  if(!t) return;
+
+  if(el.dataset.action === "category") t.category = el.value || "כללי";
+  if(el.dataset.action === "owner") t.owner = el.value;
+
+  clearTimeout(window._saveTimer);
+  window._saveTimer = setTimeout(save, 600);
+});
+
+document.querySelectorAll(".navBtn").forEach(btn => btn.addEventListener("click", () => {
+  tab = btn.dataset.tab;
+  render();
+}));
+
+document.getElementById("searchToggle").addEventListener("click", () => {
+  search.style.display = search.style.display === "block" ? "none" : "block";
+  if(search.style.display === "block") search.focus();
+});
+
+search.addEventListener("input", () => {
+  query = search.value.trim();
+  render();
+});
+
+clear.addEventListener("click", () => {
+  query = "";
+  search.value = "";
+  render();
+});
+
+const addPanel = document.getElementById("addPanel");
+document.getElementById("addFab").addEventListener("click", () => addPanel.classList.add("open"));
+document.getElementById("closePanel").addEventListener("click", () => addPanel.classList.remove("open"));
+addPanel.addEventListener("click", e => { if(e.target === addPanel) addPanel.classList.remove("open"); });
+
+document.getElementById("createTask").addEventListener("click", () => {
+  const text = document.getElementById("newTaskText").value.trim();
+  if(!text) return;
+
+  const task = {
+    id: Date.now(),
+    area: document.getElementById("newTaskArea").value,
+    category: document.getElementById("newTaskCategory").value.trim() || "כללי",
+    task: text,
+    priority: document.getElementById("newTaskPriority").value === "גבוה" ? "גבוה" : "",
+    status: "לא התחיל",
+    owner: "",
+    notes: ""
+  };
+
+  tasks = [task, ...tasks].map(normalizeTask);
+
+  document.getElementById("newTaskText").value = "";
+  document.getElementById("newTaskCategory").value = "כללי";
+  document.getElementById("newTaskPriority").value = "";
+  addPanel.classList.remove("open");
+
+  save();
+});
+
+async function init(){
+  try{
+    const snap = await getDoc(boardRef);
+
+    if(!snap.exists()){
+      await setDoc(boardRef, {tasks: INITIAL_TASKS.map(normalizeTask), updatedAt: serverTimestamp()});
+    }
+
+    onSnapshot(boardRef, docSnap => {
+      const data = docSnap.data();
+      if(data && Array.isArray(data.tasks)){
+        tasks = data.tasks.map(normalizeTask);
+        syncEl.textContent = "מסונכרן";
+        render();
+      }
+    }, err => {
+      console.error(err);
+      syncEl.textContent = "שגיאת סנכרון";
+      const backup = localStorage.getItem("moving-house-backup");
+      if(backup) tasks = JSON.parse(backup).map(normalizeTask);
+      render();
+    });
+  } catch(e){
+    console.error(e);
+    syncEl.textContent = "שגיאת חיבור";
+    render();
+  }
+}
+
+render();
+init();
+</script>
+</body>
+</html>
